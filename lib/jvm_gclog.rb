@@ -92,9 +92,17 @@ class JVMGCLog
       record["type"] = "G1GC"
       return record
 
-    when /^Total time for which application threads were stopped/
-      # ignore this kind of line.
-      return nil
+    when /^Total time for which application threads were stopped: (?<total_time>\d+\.\d+) seconds, Stopping threads took: (?<stopping_threads_took>\d+\.\d+) seconds/
+      m = Regexp.last_match
+      record.update(match_fields_to_hash(m))
+      record["type"] = "total_stw"
+      return record
+
+    when /^Application time: (?<total_time>\d+\.\d+) seconds/
+      m = Regexp.last_match
+      record.update(match_fields_to_hash(m))
+      record["type"] = "application_time"
+      return record
 
     when /^\[GC.+ParNew: (?<new_before>\d+)K-\>(?<new_after>\d+)K\((?<new_total>\d+)K\), (?<new_gctime>[\d\.]+) secs\] (?<heap_before>\d+)K\-\>(?<heap_after>\d+)K\((?<heap_total>\d+)K\)( icms_dc=(?<icms_dc>\d+) )?, (?<gctime>[\d\.]+) secs\]/
       m = Regexp.last_match
